@@ -26,3 +26,11 @@
 - comparisons/pricing-strategy-comparison.md — 定价策略对比
 
 ## [2026-05-25] update | 更新 index.md — 12个页面全部索引
+
+## [2026-05-26] update | 数据验证+策略修正
+- 验证结论：降价97.7%无效，仓租不参与定价
+- 数据源更新：4仓库仓租 + 折后价(MXN) + 在途数据
+- 判定标准修正：库龄≥30天 + 无在途 → 真滞销
+- 折扣逻辑修正：库龄×销量驱动，仓租只用于退仓建议
+- 平台规则接入：TK秒杀折后最低价约束，TK折扣≤均价85%
+- 更新页面：clearance-pricing, price-adjustment-strategy, data-driven-pricing

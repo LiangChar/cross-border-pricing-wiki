@@ -1,73 +1,58 @@
 ---
-title: 数据驱动定价与自动化
+title: 数据驱动定价与自动化（已验证版）
 created: 2026-05-25
-updated: 2026-05-25
+updated: 2026-05-26
 type: concept
-tags: [data, feishu-spreadsheet, feishu-bitable, formula, dashboard, price-optimization]
-sources: [raw/articles/10100-pricing-formula-manual.md, raw/articles/baoguane-pricing-strategy-guide.md]
+tags: [data, feishu-spreadsheet, feishu-bitable, formula, verified]
+sources: [raw/articles/10100-pricing-formula-manual.md]
 ---
 
-# 数据驱动定价与自动化
+# 数据驱动定价与自动化（已验证版）
 
-## 核心理念
+## 数据源全景
 
-> 定价不应"拍脑袋"，所有决策应基于可量化的数据公式。
+### 主数据：飞书电子表格（店铺活动表）
+- token: `HoTusM4xahtMaBtWDA8cVTSAn6u`
+- 主Sheet "总": `NKXU1U`
+- 定价用字段: A=部门 C=货号 D=自编SKU E=采购价 F=头程 G=月总销量 H=近7日总销量 I=近7日平均总销量 J=在售库存 K=动销天数 L=最长库龄
 
-^[raw/articles/10100-pricing-formula-manual.md]
+### 销量数据：近7日销量统计表（Bitable）
+- app_token: `Cf5zbg4nlauRyNslxDXcvbJYnJf`
+- table_id: `tblaOxggbSpvSino`
+- 约3739条记录
+- 关键字段：
+  - `折后价(MXN)` — 实际成交价（用于均价计算）
+  - `近7天折后价` — 价格历史数组 [最新...最旧]
+  - `近7总销量引用` — 全店铺近7日总销量
+  - `本人店铺总销量` — 本店销量
 
-## 我们的数据资产
+### 仓租数据：4仓库明细
+- MX394: tblCttyuGDheupoK (2774条)
+- XH151: tblpbuvtmKIgZWoU (2689条)
+- XH152: tblaftTasWDbJlIU (55条)
+- MX491: tblx9UPar6KSD0Gm (985条)
+- 共6503条，68个SKU多仓存储
+- 关键字段: `仓租金额(MXN)`, `仓租单价(MXN)`, `库龄(天)`
 
-### 飞书电子表格（店铺活动表）
+### 在途数据：库存统计表
+- table_id: tblSXRukbkcdIrRu
+- 约2424 SKU，933个有在途
+- 关键字段: `2025海外在途货值`, `2026海外在途货值`
 
-| 字段 | 列 | 定价用途 |
-|------|---|---------|
-| 部门 | A | 按产品线定价 |
-| 货号 | C | 产品唯一标识 |
-| 自编SKU | D | 调价目标标识 |
-| 采购价 | E | 成本基数 |
-| 月总销量 | G | 需求量 |
-| 近7日总销量 | H | 近期趋势 |
-| 近7日平均总销量 | I | 日均基准 |
-| 在售库存 | J | 供需关系 |
-| 动销天数 | K | 周转速度 |
-| 最长库龄(天) | L | 清仓信号 |
+## 滞销品判定标准（已验证）
 
-### 飞书多维表格（库存统计表）
+必须同时满足：
+1. 库龄 ≥ 30天（排除新品）
+2. 动销天数 > 30天（排除正常品）
+3. 无在途库存（排除已补货品）
 
-| 指标 | 用途 |
-|------|------|
-| 海外仓库存总计 | 可售库存 |
-| 锁定库存 | 不可用库存 |
-| 超卖判定 | 供需失衡预警 |
+## 折后价计算方法
 
-## 可落地的自动化定价流程
-
-### 1. 基础售价自动计算
-```
-飞书公式列 = 
-  (采购价 + 预估运费 + 预估仓租) × (1 + 目标利润率) 
-  ÷ (1 - 平台佣金率)
-```
-
-### 2. 库存驱动的调价信号
-
-| 信号 | 条件 | 调价动作 |
-|------|------|---------|
-| 快清仓 | 库龄 > 90天、无在途 | 降价 15-25% |
-| 必须清仓 | 库龄 > 196天 | 降价 30-50% |
-| 超卖预警 | 库存-锁定 < 0 | 暂停促销、可提价 |
-| 动销快 | 动销天数 < 7 | 保持或微涨 |
-| 滞销 | 动销天数 > 30 | 降价促销 |
-
-### 3. 利润监控面板
-建议在飞书多维表格中搭建：
-- 单品利润率 → `(售价-总成本) / 售价`
-- 周/月利润趋势
-- 退货率对利润的影响
-- ROI 仪表盘
+**来源**：近7日销量统计表 `折后价(MXN)` 字段
+**方法**：同一SKU在不同店铺的折后价去重后取最低和均价
+**注意**：不用 `单品售价(MXN)` — 该字段含旧值污染
 
 ## 参见
-- [[pricing-formula]] — 具体公式
-- [[price-adjustment-strategy]] — 调价决策矩阵
-- [[inventory-management]] — 库存数据如何驱动定价
-- [[profit-calculation]] — 利润监控指标
+- [[pricing-formula]] — 定价公式
+- [[clearance-pricing]] — 清仓定价
+- [[price-adjustment-strategy]] — 调价策略
